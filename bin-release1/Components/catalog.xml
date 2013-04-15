@@ -1,0 +1,22 @@
+<catalog>
+    <product id="1">
+         <name>Zoning</name>
+        <image>assets/images/Blue hills.jpg</image>
+        <thumbnail>../assets/products/Nokia_6360_sm.gif</thumbnail>
+    </product>
+    <product id="2">
+         <name>Landbase</name>
+        <image>assets/images/Sunset.jpg</image>
+        <thumbnail>../assets/products/Nokia_6360_sm.gif</thumbnail>
+    </product>
+    <product id="3">
+         <name>Water</name>
+        <image>assets/images/Water lilies.jpg</image>
+        <thumbnail>../assets/products/Nokia_6360_sm.gif</thumbnail>
+    </product>
+    <product id="4">
+        <name>Wastewater</name>
+        <image>assets/images/Winter.jpg</image>
+        <thumbnail>../assets/products/Nokia_6360_sm.gif</thumbnail>
+    </product>
+</catalog>

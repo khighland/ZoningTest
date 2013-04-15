@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" width="88" height="75">
+	<mx:Image source="@Embed('assets/icons/loader.gif')" verticalAlign="middle"  horizontalAlign="center" x="28" y="22"/>
+</mx:Application>

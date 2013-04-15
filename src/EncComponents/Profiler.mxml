@@ -1,0 +1,946 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SiteProfiler.mxml
+
+December 2009
+By Quartic Solutions LLC
+All rights reserved. 
+
+-->
+
+<mx:Canvas fontWeight="normal"  
+		   horizontalScrollPolicy="off"
+		   verticalScrollPolicy="off"
+		   borderColor="0x000099" cornerRadius="10" borderStyle="solid"
+		   creationComplete="init()" resize="onCanvasResize(event)" backgroundColor="#8FA9DE"
+		   includeInLayout="true"
+		   xmlns:EncComponents="EncComponents.*"
+		   xmlns:fx="http://ns.adobe.com/mxml/2009"
+		   xmlns:mx="library://ns.adobe.com/flex/mx"
+		   xmlns:esri="http://www.esri.com/2008/ags"
+		   xmlns:s="library://ns.adobe.com/flex/spark"
+>	
+
+
+<fx:Script>
+	<![CDATA[
+		import EncComponents.cboBookmarks;
+		import EncComponents.toc;
+		
+		import com.esri.ags.FeatureSet;
+		import com.esri.ags.Graphic;
+		import com.esri.ags.SpatialReference;
+		import com.esri.ags.events.ExtentEvent;
+		import com.esri.ags.events.GeometryServiceEvent;
+		import com.esri.ags.events.GeoprocessorEvent;
+		import com.esri.ags.events.MapMouseEvent;
+		import com.esri.ags.geometry.Extent;
+		import com.esri.ags.geometry.Geometry;
+		import com.esri.ags.geometry.MapPoint;
+		import com.esri.ags.layers.GraphicsLayer;
+		import com.esri.ags.layers.Layer;
+		import com.esri.ags.tasks.QueryTask;
+		import com.esri.ags.tasks.supportClasses.AddressCandidate;
+		import com.esri.ags.tasks.supportClasses.IdentifyParameters;
+		import com.esri.ags.tasks.supportClasses.IdentifyResult;
+		import com.esri.ags.tasks.supportClasses.ParameterValue;
+		import com.esri.ags.tasks.supportClasses.Query;
+		import com.esri.ags.tools.NavigationTool;
+		
+		import flash.net.navigateToURL;
+		
+		import mx.collections.*;
+		import mx.containers.TitleWindow;
+		import mx.controls.Alert;
+		import mx.core.FlexGlobals;
+
+		import mx.events.*;
+
+		import mx.events.FlexEvent;
+		import mx.graphics.ImageSnapshot;
+		import mx.graphics.codec.JPEGEncoder;
+
+		import mx.rpc.AsyncResponder;
+		import mx.rpc.Fault;
+		import mx.rpc.events.FaultEvent;
+		
+		import org.cityofencinitas.ProcessRequestResultEvent;
+		import org.cityofencinitas.Service1;
+		
+	[Bindable]
+	private var arrCollOverlayResult:ArrayCollection = new ArrayCollection;
+
+	[Bindable]
+	private var zoneAttributes:ArrayCollection = new ArrayCollection;
+	
+	[Bindable]
+	private var lastIdentifyResultGraphic:Graphic = new Graphic;
+	
+	[Bindable]
+	private var zoningresult:IdentifyResult = new IdentifyResult;
+	
+	[Bindable]
+	private var acMapLayers:Object;
+	
+	[Bindable]
+	private var acMapLayers1:Object;
+	
+	[Bindable]
+	private var acMapLayers2:Object;
+	
+	[Bindable]
+	private var acMapLayers3:Object;
+	
+	[Bindable]
+	private var imageLayer:Layer;
+	
+	[Bindable]
+	private var reliefLayer:Layer;
+	
+	[Bindable]
+	private var basemapLayer:Layer;
+
+	[Bindable]
+	private var basemapPlusLayer:Layer;
+	
+	[Bindable]
+	private var aLayersTOC:ArrayCollection = new ArrayCollection;
+	
+	[Bindable]
+    private var uploadByteArray:ByteArray
+	
+	[Bindable]
+    private var toc1x:int;
+    
+	[Bindable]
+    private var toc1y:int;
+    
+   [Bindable]
+    private var pt:Point = new Point;		
+					
+	//private var myLocationGraphicsLayer:GraphicsLayer = new GraphicsLayer;
+	private var  URLparams:Object = getURLParameters();
+	private var txtSearchType:String;
+	private var gpPending:Boolean;
+	private var APN:String
+	private var ZoneCode:String	
+	private var jpg:JPEGEncoder
+	
+	
+
+
+
+	private function init():void
+	{
+
+		aLayersTOC.removeAll()
+		
+		reliefLayer = map.layers[0];
+		imageLayer = map.layers[1];
+		
+		basemapLayer = map.layers[3];
+		basemapPlusLayer = map.layers[4];
+		
+		
+
+		aLayersTOC.addItem(map.layers[2]);
+		
+		pt.x =cboBookmarks.x;
+		pt.y =cboBookmarks.y;
+		pt = cboBookmarks.localToContent(pt)
+		toc1x =  this.x + 700 //pt.x //+ cboBookmarks.width + 5
+		toc1y = this.y + 41
+		
+		
+		
+		this.setChildIndex(appMain, 1)
+		this.setChildIndex(Toc1, 2)
+		//this.setChildIndex(Jump1, 3)
+		//showFloatingWindow()
+
+		//Check to see if parameters were passed in the URl string
+		if (URLparams ["start"])
+		{
+			
+			if (URLparams ["start"].toString() == "geocode")
+			{
+				
+				
+				var addr:String=(URLparams ["search"].toString());
+				if (URLparams ["srchType"])
+				{
+					var srchtype:String=(URLparams ["srchType"].toString());
+					if (srchtype == "1")
+					{
+						doSearchAPN(addr)
+					}
+					else
+					{
+						doSearchAddress(addr)
+					}
+				}
+			}
+			else if (URLparams ["start"].toString() == "extent")
+			{
+				var extent:Extent = new Extent(URLparams ['xmin'].toString(),URLparams ['ymin'].toString(),URLparams ['xmax'].toString(),URLparams ['ymax'].toString())
+				map.extent = extent
+			}
+		}
+		
+		if (URLparams ['X'])
+		{
+			var mapPoint:MapPoint = new MapPoint(URLparams ['X'].toString(),URLparams ['Y'].toString())
+			var mapEvent:MapMouseEvent = new MapMouseEvent("mapClick", map, mapPoint)
+			onMapClicked(mapEvent)
+			
+		}
+	}
+	
+	private function onCanvasResize(event:Event):void
+	{
+
+	}
+	
+	private function doSearchAddress(addr:String):void
+	{
+	var addressObjectAddress:Object = 
+	{
+		Street: addr
+	}
+
+	var myOutFieldsAddress:Array = ["HouseNum"];
+	AddressLocator.addressToLocations(addressObjectAddress,myOutFieldsAddress,new AsyncResponder(onGeoResult, onGeoFault));
+	}
+	
+	private function doSearchAPN(addr:String):void
+	{
+	var addressObject:Object = 
+	{
+		SingleKey: addr
+	}
+
+	var myOutFields:Array = ["Match_addr"];
+	APNLocator.addressToLocations(addressObject,myOutFields,new AsyncResponder(onGeoResult, onGeoFault));
+	}
+	
+	private function onMapClicked(event:MapMouseEvent):void
+	{
+		if (gpPending)
+		{
+			return;
+		}
+		
+/* 		if (tbb.selectedIndex < 2)
+		{
+			return;
+		} */
+		
+		lblAddress.text = "";
+		lblAPN.text = "";
+		lblZoneInfo.text = "";
+		//Jump1.pointClicked = event.mapPoint
+		doQuery(event.mapPoint);
+	}
+	
+	private function onMouseDown(event:MouseEvent):void
+	{
+		Toc1.x = event.stageX - 25
+		Toc1.y = event.stageY - 25
+		Toc1.visible = true
+		Toc1.getFocus()
+	}
+	
+
+	
+		private function onGeoResult(candidates:Array, token:Object = null):void 
+		{
+			if (candidates.length > 0)                    
+			{                        
+				var addressCandidate:AddressCandidate = candidates[0];
+				var point1:MapPoint = addressCandidate.location;
+				var coordGraphic:Graphic = new Graphic(point1,smsIdentify);
+				coordGraphic.geometry.spatialReference = new SpatialReference(2230)
+				var outSR:SpatialReference = new SpatialReference(102100);
+				geometry1.project([ point1 as Geometry],outSR);                        
+				
+			}
+			else
+			{
+				Alert.show("Could not find this location. Please check the information you entered and try again")
+			}
+		}
+	
+	private function onGeoFault(info:Object, token:Object = null):void                
+	{                    
+		Alert.show("Failure: \n" + info.toString());                
+	}
+	
+	private function doQuery(queryPoint:MapPoint):void
+	{
+			//Jump1.pointClicked = queryPoint
+			graphicsLayer.clear();
+			if (zoneAttributes.length >0)
+			{
+				zoneAttributes.removeAll(); 
+				
+			}
+			
+			var identifyParams:IdentifyParameters = new IdentifyParameters();
+			identifyParams.returnGeometry=true;
+			identifyParams.width=map.width;
+			identifyParams.height=map.height;
+			identifyParams.geometry= queryPoint;
+			identifyParams.mapExtent= map.extent;
+			identifyParams.spatialReference= map.spatialReference;
+			identifyParams.tolerance=3;
+			identifyParams.layerOption = "all";
+			identifyZone.execute(identifyParams, new AsyncResponder(onZoningFound,onZoningFault));
+			identifyParams.layerIds= [7];
+			identifyParcel.execute(identifyParams, new AsyncResponder(onParcelIdentify,onParcelsFault));
+	}
+	
+			private function onZoningFound(identifyResults:Array,clickGraphic:Graphic = null):void
+			{
+				//lblAPN.text = "There was no parcel found at this point."
+				
+				if (identifyResults && identifyResults.length > 0)
+				{
+					var result:IdentifyResult;
+					for each(zoningresult in identifyResults)
+					{
+						var strFootnote:String; //We want to add footnote last so record value in var and then add at end of loop
+						ZoneCode = zoningresult.feature.attributes["Zoning code"];
+						lblZoneInfo.text=zoningresult.feature.attributes["Zoning code"];
+						lblZoneInfo.visible= true
+						lastIdentifyResultGraphic.attributes = zoningresult.feature.attributes;
+						var obj:Object = lastIdentifyResultGraphic.attributes;
+						for ( var fld:String in obj )
+						{
+							switch (fld)
+							{
+								case "Footnote":
+									strFootnote = obj[fld];
+								case "URL":
+									break;
+								default:
+									zoneAttributes.addItem({Category: fld, Value: obj[fld]});
+									break;
+							 
+							}
+						}
+						zoneAttributes.addItem({Category: "Footnote", Value: strFootnote});
+					}
+				}
+			}
+			private function onZoningFault(error:Fault, token:Object = null):void
+			{
+				Alert.show(error.faultDetail)
+			}
+		private function onParcelsFault(error:Fault, token:Object = null):void
+		{
+			Alert.show(error.faultDetail)
+		}
+			
+			//This function takes the parcelquery resulta and submits the parcel to the geoprocessing 
+			//query to do the overlay against the zones
+			private function onParcelIdentify(identifyResults:Array,clickGraphic:Graphic = null):void
+			{
+				var condoresult:IdentifyResult;
+				var baseresult:IdentifyResult;
+				//If no parcel found then exit the function
+				if (identifyResults.length == 0)
+				{
+					return
+				}
+				for each (var parcelResult:IdentifyResult in identifyResults)
+				{
+					if (parcelResult.layerName == "Parcels")
+					{
+						if (parcelResult.feature.attributes.ParcelType == "APN")
+						{
+							condoresult = parcelResult;
+						}
+						else if (parcelResult.feature.attributes.ParcelType == "BaseAPN")
+						{
+							baseresult = parcelResult;
+						}
+					}
+
+				}
+				
+				if (condoresult)
+				{
+					lblAPN.text =  condoresult.feature.attributes.APN;
+					lblAddress.text = condoresult.feature.attributes.SitusStreet;
+					APN = condoresult.feature.attributes.APN;
+					
+					var gpParrameters:Object =
+						{
+							"Expression": "APN = \'" + condoresult.feature.attributes.APN + "\'"
+						};
+					
+					gp.outSpatialReference= map.spatialReference;
+					//gp.execute(gpParrameters);
+					gp.submitJob(gpParrameters);
+					arrCollOverlayResult.removeAll();
+					arrCollOverlayResult.addItem({paramName: "Processing....Please wait", value: "Processing.....",  url: "http://www.ci.encinitas.ca.us/NR/rdonlyres/E4375FF4-EE37-49DF-9215-69F61FA73C58/0/30C34.pdf"});
+					gpPending=true;
+					parcelResult.feature.symbol = fillSymbol
+					lastIdentifyResultGraphic = condoresult.feature
+				}
+				else if (baseresult)
+				{
+					lblAPN.text =  baseresult.feature.attributes.APN;
+					lblAddress.text = baseresult.feature.attributes.SitusStreet;
+					APN = baseresult.feature.attributes.APN;
+					
+					var gpParrameters2:Object =
+						{
+							"Expression": "APN = \'" + baseresult.feature.attributes.APN + "\'"
+						};
+					
+					gp.outSpatialReference= map.spatialReference;
+					//gp.execute(gpParrameters);
+					gp.submitJob(gpParrameters2);
+					arrCollOverlayResult.removeAll();
+					arrCollOverlayResult.addItem({paramName: "Processing....Please wait", value: "Processing.....",  url: "http://www.ci.encinitas.ca.us/NR/rdonlyres/E4375FF4-EE37-49DF-9215-69F61FA73C58/0/30C34.pdf"});
+					gpPending=true;
+					parcelResult.feature.symbol = fillSymbol
+					lastIdentifyResultGraphic = baseresult.feature
+				}
+
+			}
+	
+	private function mouseoverButton(event:MouseEvent):void
+	{
+		//Set button effects
+		var btn:Object= event.currentTarget
+		
+       btn.styleName="myMouseOverButtonStyle"
+
+	}
+	
+	
+      
+		private function onGPCompleteHandler(event:GeoprocessorEvent):void
+		{
+			gp.getResultData(event.jobInfo.jobId, "FloodResult", new AsyncResponder(onResultReturn,  anResultFail));
+			gp.getResultData(event.jobInfo.jobId, "CulturalResult", new AsyncResponder(onResultReturn,  anResultFail));
+			gp.getResultData(event.jobInfo.jobId, "MuseumResult", new AsyncResponder(onResultReturn,  anResultFail));
+			gp.getResultData(event.jobInfo.jobId, "SpecificStudyResult", new AsyncResponder(onResultReturn,  anResultFail));
+			gp.getResultData(event.jobInfo.jobId, "ScenicResult", new AsyncResponder(onResultReturn,  anResultFail));
+			gp.getResultData(event.jobInfo.jobId, "HillsideResult", new AsyncResponder(onResultReturn,  anResultFail));
+			gp.getResultData(event.jobInfo.jobId, "SpecificPlanResult", new AsyncResponder(onResultReturn,  anResultFail));
+			gp.getResultData(event.jobInfo.jobId, "CoastalResult", new AsyncResponder(onResultReturn,  anResultFail));
+			arrCollOverlayResult.removeItemAt(0);
+			gpPending = false;
+			//gp.getResultData(event.jobInfo.jobId, "ParcelResult", new AsyncResponder(onResultReturn,  anResultFail));
+			
+			
+		}
+		
+		private function onResultReturn(result:ParameterValue, messages:Object):void
+		{
+			if (result.value == 1)
+			{
+				switch( result.paramName)
+				{
+					case 'FloodResult':
+						arrCollOverlayResult.addItem({paramName: "Flood Zone", url: "http://www.encinitasca.gov/Modules/ShowDocument.aspx?documentid=722" });
+						break;
+					case "CulturalResult":
+						arrCollOverlayResult.addItem({paramName: "Cultural Zone", url: "http://www.encinitasca.gov/Modules/ShowDocument.aspx?documentid=722" });
+						break;
+					case "MuseumResult":
+						arrCollOverlayResult.addItem({paramName: "Museum Zone", url: "http://www.encinitasca.gov/Modules/ShowDocument.aspx?documentid=722" });
+						break;
+					case "SpecificStudyResult":
+						arrCollOverlayResult.addItem({paramName: "Special Study Zone", url: "http://www.encinitasca.gov/Modules/ShowDocument.aspx?documentid=721" });
+						break;
+					case "ScenicResult":
+						arrCollOverlayResult.addItem({paramName: "Scenic Zone", url: "http://www.encinitasca.gov/Modules/ShowDocument.aspx?documentid=722" });
+						break;
+					case "HillsideResult":
+						arrCollOverlayResult.addItem({paramName: "Hillside Study Zone", url: "http://www.encinitasca.gov/Modules/ShowDocument.aspx?documentid=722" });
+						break;
+					case "SpecificPlanResult":
+						arrCollOverlayResult.addItem({paramName: "Specific Plan Zone", url: "http://www.encinitasca.gov/Modules/ShowDocument.aspx?documentid=655" });
+						break;
+					case "CoastalResult":
+						arrCollOverlayResult.addItem({paramName: "Coastal Zone", url: "http://www.encinitasca.gov/Modules/ShowDocument.aspx?documentid=722" });
+						break;
+					default:
+						arrCollOverlayResult.addItem({paramName: "The parcel is not within any zone", url: FlexGlobals.topLevelApplication.url});
+						break;
+						
+				} 		
+			}
+		}
+		
+		private function anResultFail(fe:Fault, tok:Object=null) :void
+		{
+			Alert.show(fe.faultCode + " " + fe.faultDetail + "   anResultFail");
+		}
+		
+		private function onGPFaultHandler(fe:FaultEvent):void
+		{
+			Alert.show(fe.message + " " + fe.fault + "   onGPFaultHandler ");
+			gpPending = false;
+		}
+            
+	 public function getURLParameters():Object
+	 {
+	 	var result:URLVariables = new URLVariables();
+	 	try 
+	 	{                    
+	 		if (ExternalInterface.available)
+	 		{ 
+		 		// Use JavaScript to get the search string from the current 
+		 		//browser location. Use substring() to remove leading '?'. 
+		 		// See http://livedocs.adobe.com/flex/3/langref/flash/external/ExternalInterface.html 
+		 		var search:String = ExternalInterface.call("location.search.substring", 1);
+		 		if (search && search.length > 0)
+		 		{
+		 			result.decode(search);
+		 		}
+	 		}
+	 	}
+		catch (error:Error)
+		{
+			Alert.show(error.message);
+		}
+		return result;
+	 }
+	 
+	 private function onNewSearch(event:Event):void
+	 {
+	 	var i:int = txtFindSite.text.indexOf(" ");
+	 	if (i > -1 && i < 10)
+	 	{
+	 		doSearchAddress(txtFindSite.text)
+	 	}
+	 	else
+	 	{
+	 		doSearchAPN(txtFindSite.text)
+	 	}
+	 	
+	 }
+	 
+	 private function onExtentChanged(event:ExtentEvent):void
+	 {
+	 	
+ 		myParcelGraphicsLayer.clear()
+		if (map.level > 9) 
+		{
+			queryParcel.geometry = map.extent;
+			queryParcelLayer.execute(queryParcel, new AsyncResponder(onqueryParcelResult, onqueryParcelFail));
+		} 
+	 }
+	 
+ 		//Handler for the results of the queryParcel task. only add features that are not already in the graphics layer
+	private function onqueryParcelResult(featureSet:FeatureSet, token:Object= null):void
+	{
+		
+		var i:int=0
+		for each (var myGraphic:Graphic in featureSet.features)                
+		{
+			myGraphic.id = i.toString();
+			myGraphic.addEventListener(MouseEvent.ROLL_OVER, graphicRollOverHandler, false, 0 , true);
+			myGraphic.addEventListener(MouseEvent.ROLL_OUT, graphicRollOutHandler, false, 0 ,true);
+			i = i++;
+			var obj:Object = myGraphic.attributes;
+			for each (var fld:String in obj)
+			{
+					myGraphic.toolTip = fld;
+			}
+			//myGraphic.toolTip = myGraphic.attributes.gisdata.gis.hdl_TaxRec.SitusStreet	//gisdata.gis.hdl_TaxRec.SitusStreet;
+			//myParcelGraphicsLayer.add(myGraphic);
+			myParcelGraphicsLayer.graphicProvider = featureSet.features;
+			//var fldalias:Object = featureSet.fieldAliases
+			//var graphicID:String = myGraphic.attributes.gisdata.GIS.tax_Parcel.OBJECTID;
+			/* if (!hashmapOfExistingGraphics[graphicID]) // New feature (not already added to graphics layer)
+			{ 
+				hashmapOfExistingGraphics[graphicID] = 1;
+				myGraphic.id = graphicID;
+				myGraphic.toolTip = myGraphic.attributes.gisdata.gis.hdl_TaxRec.SitusStreet;
+				myParcelGraphicsLayer.add(myGraphic);
+			} */
+		}
+	}
+	
+	private function onqueryParcelFail(info:Object, token:Object = null):void
+	{
+		Alert.show(info.toString(),"onqueryParcelFail");
+	}
+			
+	private function graphicRollOverHandler(event:MouseEvent):void
+    {
+        ParcelglowEffect.play([event.target]);
+    }
+
+    private function graphicRollOutHandler(event:MouseEvent):void
+    {
+        //glowEffect.play([event.target], true); // play reversed
+        setTimeout(cleanupGlowEffect, ParcelglowEffect.duration, event.target);
+    }
+
+    private function cleanupGlowEffect(graphic:Graphic):void
+    {
+        graphic.filters = []; // remove leftover artifacts
+    }
+    
+    private function onBookMarkChange(event:Event):void
+    {
+    	var ext:Extent = new Extent(event.currentTarget.selectedItem.x1, event.currentTarget.selectedItem.y1, event.currentTarget.selectedItem.x2, event.currentTarget.selectedItem.y2);
+		map.extent = ext;
+    }
+
+
+	
+	
+	private function navitemClickHandler(event:ItemClickEvent):void
+	{
+ 		switch (event.item.data)
+		{                    
+			case "Zoom In":                    
+			{                        
+				navToolbar.activate(NavigationTool.ZOOM_IN);
+		
+				break;                    
+			}                    
+			case "Zoom Out":                    
+			{                        
+				navToolbar.activate(NavigationTool.ZOOM_OUT);                        
+				break;                    
+			}                    
+/* 			case "Pan":                    
+			{                        
+				navToolbar.activate(NavigationTool.PAN);
+				map.removeEventListener(MapMouseEvent.MAP_CLICK, onMapClicked); 
+				break;                    
+			} */
+			case "Identify":
+			{
+				navToolbar.deactivate();
+				//map.addEventListener(MapMouseEvent.MAP_CLICK,onMapClicked);
+				map.panEnabled=true;
+				map.openHandCursorVisible = false;
+				//tbb.selectedIndex = -1
+				break;
+			}                
+		}             
+	}
+	
+	private function onGenerateReport(event:MouseEvent):void
+	{
+		var overlayzones:String = '';
+		var obj:Object;
+		var i:int = 0;
+		while (i < arrCollOverlayResult.length)
+		{
+			obj = arrCollOverlayResult [i];
+			overlayzones = overlayzones + "&" + obj.paramName + "=True";
+			i++;
+		}
+ 
+		var service2:Service1  = new Service1;
+      	service2.addprocessRequestEventListener(function(event:ProcessRequestResultEvent):void{
+      		//Alert.show(event.result);
+      		navigateToURL(new URLRequest('http://ezoning.cityofencinitas.org/zonereport?APN=' + APN + '&ZoneCode=' + ZoneCode +'&RequestID=' + APN + overlayzones ),"quote");
+      		//navigateToURL(new URLRequest( Application.application.url + '/zoningreport/identify.png?APN=' + APN + '&ZoneCode=' + ZoneCode +'&RequestID=' + APN + overlayzones ),"quote");
+      	});
+      	var filename:String = APN + ".jpg";
+      	
+      	
+      	//service2.processRequest_request_var.filename = filename
+      	var imgSnapShot:ImageSnapshot = new ImageSnapshot
+      	uploadByteArray = new ByteArray;
+        jpg = new JPEGEncoder(75);
+        var bitmapData:BitmapData = new BitmapData( map.width,map.height);
+        bitmapData.draw(map);
+        var quality:int = 75;
+		uploadByteArray = jpg.encode(bitmapData);
+		try 
+   		{      	
+			service2.processRequest(uploadByteArray,filename)
+		}
+		catch (error:Error) 
+        {         
+         	Alert.show(error.message)
+
+        }
+        catch (error:IOError)
+        {
+        	Alert.show(error.message)
+
+        }
+	}
+	
+	private function ontxtBoxClick(event:MouseEvent):void
+	{
+		txtFindSite.text = ""
+	}
+	
+		private function onProjectComplete(event:GeometryServiceEvent):void
+		{
+			var pt:MapPoint = (event.result as Array)[0]as MapPoint;
+			map.centerAt(pt);
+			map.scale = 1128.497176;
+			doQuery(pt);
+		}
+
+    private function onProjectFault(info:Object, token:Object = null):void
+    {
+    	Alert.show(info.toString());
+    }
+
+
+	]]>
+</fx:Script>
+	
+	<fx:Declarations>
+		<esri:Locator id="AddressLocator"
+					  url="http://encmapservices.cityofencinitas.org/ArcGIS/rest/services/Unsecured/GISSQL_Address/GeocodeServer"/>
+		
+		<esri:Locator id="APNLocator"
+					  url="http://encmapservices.cityofencinitas.org/ArcGIS/rest/services/Unsecured/GISSQL_APN/GeocodeServer"/>
+		
+		<esri:GeometryService id="geometry1"
+							  concurrency="last"
+							  projectComplete="onProjectComplete(event)"
+							  fault="onProjectFault(event)"
+							  url="http://encmapservices.cityofencinitas.org/ArcGIS/rest/services/Geometry/GeometryServer"/>	
+	
+		<esri:IdentifyTask id="identifyZone"
+						   concurrency="last"
+						   url="http://encmapservices.cityofencinitas.org/ArcGIS/rest/services/Unsecured/E_Zoning/MapServer"
+						   disableClientCaching="true">
+		</esri:IdentifyTask>
+		
+		<esri:IdentifyTask id="identifyParcel"
+						   concurrency="last"
+						   url="http://encmapservices.cityofencinitas.org/ArcGIS/rest/services/Unsecured/BasemapPlus/MapServer"
+						   disableClientCaching="true">
+		</esri:IdentifyTask>
+		
+		<esri:Query id="queryParcel" returnGeometry="true" where="ParcelType = 'APN'"  >
+			<esri:outFields>
+				<fx:String>gispub.gis.hdl_TaxRec.SitusStreet</fx:String>
+			</esri:outFields>
+		</esri:Query>
+		
+		<esri:QueryTask id="queryParcelLayer" 
+						url="http://encmapservices.cityofencinitas.org/ArcGIS/rest/services/Unsecured/BasemapPlus/MapServer/8" 
+						useAMF="true"  />
+		
+		
+		<esri:Query id="parcelQuery" returnGeometry="true">
+			<esri:outFields>
+				<fx:String>APN</fx:String>
+			</esri:outFields>
+		</esri:Query>	
+		
+		<esri:SimpleFillSymbol id="sfsIdentify"  />
+		
+		
+		<esri:Geoprocessor id="gp"
+						   url="http://encmapservices.cityofencinitas.org/ArcGIS/rest/services/Unsecured/ParcelOverlayZones/GPServer/ParcelOverlayZones"
+						   jobComplete="onGPCompleteHandler(event)"
+						   fault="onGPFaultHandler(event)" useAMF="true">
+		</esri:Geoprocessor>
+		
+		<esri:NavigationTool id="navToolbar" map="{map}"/>
+	
+		
+		<esri:SimpleFillSymbol  id="fillSymbol" color="0xFF0033" alpha="0.25" style="null">
+			<esri:SimpleLineSymbol color="0x6600FF" width="4" alpha="1" style="dashdotdot" />
+		</esri:SimpleFillSymbol>
+		
+		<!-- symbol to store geocode result so it can be reprojected -->
+		<esri:SimpleMarkerSymbol id="smsIdentify" style="diamond" color="0x00FF00" size="15"/>
+		
+		<esri:SimpleFillSymbol id="nullSymbol"  color="0xffffff" alpha=".1" />
+		
+		
+		<mx:Glow id="ParcelglowEffect"
+				 alphaFrom="1" alphaTo="0.65"
+				 blurXFrom="0.0" blurXTo="20.0"
+				 blurYFrom="0.0" blurYTo="20.0"
+				 color="0x0000FF" inner="true" knockout="false"/>
+	</fx:Declarations>
+	
+	<mx:Image id="bgImage" alpha=".75" source="Styles/plain_bluesteel.JPG" maintainAspectRatio="false" width="100%" height="100%"/>
+
+	<EncComponents:toc id="Toc1" visible="true"  
+		aLayersTOC="{aLayersTOC}" 
+		x="{hbxAddress.width + cboBookmarks.x + 7}" 
+		y="{bgImage.height - (hbxAddress.height / 2)}" />
+ 
+<!--	<EncComponents:ApplicationJumpSpark id="Jump1" 	x="{hbxAddress.width + cboBookmarks.x + 200} " 
+		y="{bgImage.height - (hbxAddress.height)}" curmap="{map.extent}"  />-->
+	
+		
+	<EncComponents:OverViewComponent id="overviewMap" 
+		parentMap="{map}" 
+		y = "{hbHeader.height + 40}"
+		toolTip= "{overviewMap.y}">
+		
+	</EncComponents:OverViewComponent>
+	
+	<EncComponents:BackroundTransparancyControl id = "mapcontrol1" 
+		 y = "{hbHeader.height + 5}"
+		 x= "{appMain.width - 150}"
+		 basemapLayer="{reliefLayer}"
+		 imageLayer="{imageLayer}">
+	</EncComponents:BackroundTransparancyControl>
+	
+	<EncComponents:BasemapTransparancyControl id="basmapControl1"
+		y="{hbHeader.height + 5}"
+		x= "{appMain.width - 300}"
+		BMLayer="{basemapLayer}"
+		BMPlusLayer="{basemapPlusLayer}">
+		
+	</EncComponents:BasemapTransparancyControl>
+
+	
+<mx:VBox  horizontalScrollPolicy="off" verticalScrollPolicy="off" width="100%" height="100%" id="appMain">
+
+	
+		
+	<mx:HBox width="100%" horizontalGap="0" id="hbHeader">
+		<mx:Image height="100%" maintainAspectRatio="false" source="@Embed('/ZoningTest/src/assets/icons/City Logo_Banner.JPG')"/>
+		<mx:Image width="100%" source="@Embed('/ZoningTest/src/assets/icons/BkGd.gif')" maintainAspectRatio="false" id="imgHeader2"/>
+	</mx:HBox>
+
+	<mx:HBox width="100%" height="100%" id="hbMain">
+		
+		<mx:VBox width="30%" height="100%" borderColor="#FFFFFF"  backgroundColor="0xffffff" backgroundAlpha=".7" >
+	        <mx:TitleWindow alpha=".95" title="Site Details" width="100%" height="100%" headerHeight="30" fontSize="13" left="0" >
+			<mx:VBox width="100%" height="100%">
+				<mx:HBox id = "horizontallblControl" height="20" color="#0B333C">
+					<mx:Label text="Address:" fontWeight="bold"/>
+					<mx:Label id="lblAddress" width="100%" height="20" color="#0B333C"/>
+					<mx:Label text="APN:" fontWeight="bold"/>
+					<mx:Label id="lblAPN" width="100%" height="20" color="#0B333C"/>
+				</mx:HBox>
+				<mx:HBox width="100%"> 
+					<mx:Label text="The point clicked has zoning type:" fontWeight="bold"/>
+					<mx:Label id="lblZoneInfo" width="100%" height="20" color="#0B333C"/>
+				</mx:HBox>
+				<mx:DataGrid id="dgZoning"  dataProvider="{zoneAttributes}" wordWrap="true" width="100%" variableRowHeight="true" height="75%">
+	
+				</mx:DataGrid>
+				<mx:DataGrid dataProvider="{arrCollOverlayResult}" width="100%" height="25%">
+					<mx:columns>
+						<mx:DataGridColumn headerText="Zone Type" dataField="paramName" visible="false"/>
+						<mx:DataGridColumn headerText="The parcel is within these overlay zones:" itemRenderer="EncComponents.urlRenderer2" sortable="false"  textDecoration="underline"/>
+					</mx:columns>
+				</mx:DataGrid>
+			</mx:VBox>
+									
+				<mx:Button label="Generate Report" enabled="true" visible="true" click="onGenerateReport(event)" id="btnReportGenerator"/>
+
+			</mx:TitleWindow>
+		</mx:VBox>
+		
+		<mx:Canvas label="Parcel Map" width="70%" height="100%" id="cnvMap">
+			
+			<esri:Map id="map" openHandCursorVisible="false"  logoVisible="false" rubberbandZoomEnabled="true"  mapClick="onMapClicked(event)" extentChange="onExtentChanged(event)" bottom="0" left="0" top="0" right="0" panArrowsVisible="true" panEnabled="true">
+			<esri:lods>
+				<esri:LOD level="11" resolution="76.4370282850732" scale="288895.277144"/>
+				<esri:LOD level="12" resolution="38.2185141425366" scale="144447.638572"/>
+				<esri:LOD level="13" resolution="19.1092570712683" scale="72223.819286"/>
+				<esri:LOD level="14" resolution="9.55462853563415" scale="36111.909643"/>
+				<esri:LOD level="15" resolution="6.3500127000254" scale="24000"/>
+				<esri:LOD level="16" resolution="4.77731426794937" scale="18055.954822"/>
+				<esri:LOD level="18" resolution="2.38865713397468" scale="9027.977411"/>
+				<esri:LOD level="19" resolution="1.19432856685505" scale="4513.988705"/>
+				<esri:LOD level="21" resolution="0.597164283559817" scale="2256.994353"/>
+				<esri:LOD level="23" resolution="0.298582141647617" scale="1128.497176"/>
+				<esri:LOD level="24" resolution="0.158750317500635" scale="600"/>
+				<esri:LOD level="25" resolution="0.0793751587503175" scale="300"/>
+			</esri:lods> 
+				<esri:ArcGISTiledMapServiceLayer id="ShadedRelief"   url="http://encmapservices.cityofencinitas.org/ArcGIS/rest/services/Unsecured/Shaded_Relief_2009/MapServer" visible="true" alpha="0"/>
+				<esri:ArcGISTiledMapServiceLayer id="Imagery"   url="http://encmapservices.cityofencinitas.org/ArcGIS/rest/services/Unsecured/Imagery_2009_Web/MapServer" visible="true"/>
+				<esri:ArcGISTiledMapServiceLayer id="Zoning" url="http://encmapservices.cityofencinitas.org/ArcGIS/rest/services/Unsecured/E_Zoning/MapServer" visible="true" alpha=".5"/>
+				<esri:ArcGISTiledMapServiceLayer id="Basmap"   url="http://encmapservices.cityofencinitas.org/ArcGIS/rest/services/Unsecured/Basemap/MapServer" visible="true"/> 
+				<esri:ArcGISTiledMapServiceLayer id="BasmapPlus"   url="http://encmapservices.cityofencinitas.org/ArcGIS/rest/services/Unsecured/BasemapPlus/MapServer" visible="false"/>
+				<esri:GraphicsLayer id="graphicsLayer" graphicProvider="{lastIdentifyResultGraphic}"/>                       
+		    	<esri:GraphicsLayer id="myParcelGraphicsLayer" symbol= "{nullSymbol}"/>
+		    </esri:Map>
+		    
+		</mx:Canvas>
+	</mx:HBox>
+	
+	<mx:HBox backgroundColor="0xffffff" backgroundAlpha=".7" width="100%" height="8%" horizontalScrollPolicy="off" verticalScrollPolicy="off" fontSize="10" id="hbTools">
+		
+		<mx:HBox borderColor="0xffffff" paddingLeft="7" paddingRight="7" paddingBottom="5" paddingTop="5" width="30%" height="100%" id="hbxAddress">
+			
+			<mx:Label text="Find:" fontWeight="bold" fontSize="13" width="42">
+				
+			</mx:Label>
+			<mx:TextInput id="txtFindSite" fontSize="12" fontStyle="italic" 
+						  toolTip="Example:  505 S Vulcan Ave" text="type address or parcel number" 
+						  width="216" click="ontxtBoxClick(event)"
+						  enter="onNewSearch(event)"/>
+			<mx:Button id="btnGo" fontSize="12"
+					   label="Go" 
+					   click="onNewSearch(event)"/>
+			<mx:VBox height="100%" horizontalAlign="center" verticalGap="0">
+				<mx:Label text="e.g: 505 S Vulcan Ave" textAlign="left" width="100%" fontSize="9"/>
+				<mx:Label text="or"/>
+				<mx:Label text="2580904300"/>
+			</mx:VBox>
+		</mx:HBox>
+		
+		<mx:HBox borderColor="0xffffff"  paddingLeft="5" paddingRight="5" paddingBottom="5" paddingTop="5" height="100%" width="70%" id="hbxTools">
+			
+			
+			<mx:ControlBar paddingTop="0" paddingBottom="0" horizontalAlign="center">        
+				<mx:ToggleButtonBar id="tbb" 
+									creationComplete="tbb.selectedIndex = 2" 
+									valueCommit="if (tbb.selectedIndex == -1) { navToolbar.deactivate() }"
+									itemClick="navitemClickHandler(event)"            
+									toggleOnClick="true"
+									buttonMode="true"
+									buttonHeight="32"
+									buttonWidth="32"
+									toolTipField="toolTip">            
+					<mx:dataProvider>                
+						<fx:Object  data="Zoom In" icon="@Embed(source='assets/icons/i_zoomin.png')" toolTip="Click or drag on map to zoom in"/>
+						<fx:Object data="Zoom Out" icon="@Embed(source='assets/icons/i_zoomout.png')" toolTip="Click or drag on map to zoom out"/>
+						<fx:Object data="Identify" icon="@Embed(source='assets/icons/pan_identify.png')" toolTip="Click on a site to get info on it or drag on map to pan around"/>
+					</mx:dataProvider>        
+				</mx:ToggleButtonBar>        
+				<mx:ControlBar horizontalGap="0" paddingBottom="0" paddingTop="0" buttonMode="true">           
+					<mx:Button  icon="@Embed(source='assets/icons/i_zoomprevious.png')" 
+								click="navToolbar.zoomToPrevExtent()" 
+								enabled="{!navToolbar.isFirstExtent}"
+								toolTip="Zoom to the previous extent"
+								height="32" 
+								width="32"  />            
+					<mx:Button icon="@Embed(source='assets/icons/i_zoomnext.png')" 
+							   click="navToolbar.zoomToNextExtent()" 
+							   enabled="{!navToolbar.isLastExtent}"
+							   toolTip="Zoom to the next extent"
+							   height="32" 
+							   width="32"/>        
+				</mx:ControlBar>        
+				<mx:Button icon="@Embed(source='assets/icons/i_zoomfull.png')" 
+						   click="map.zoomToInitialExtent()" 
+						   toolTip="Zoom all the way out" 
+						   height="32" 
+						   width="32"/>    
+			</mx:ControlBar>
+			<mx:Label text="Zoom To:" fontSize="12" fontWeight="bold"/>
+			
+			<EncComponents:cboBookmarks id="cboBookmarks" change="onBookMarkChange(event)" toolTip="Select a location from the drop down to zoom to it" />
+			
+			<mx:Spacer width="100%"/>
+			<mx:Button label="Help" id="btnHelp" fontSize="12" toolTip="Help"  visible="false"/>
+		</mx:HBox>
+	</mx:HBox>
+
+
+</mx:VBox>
+
+</mx:Canvas>

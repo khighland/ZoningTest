@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+				xmlns:mx="library://ns.adobe.com/flex/mx"
+				xmlns:esri="http://www.esri.com/2008/ags"
+				xmlns:s="library://ns.adobe.com/flex/spark"
+				creationComplete="init()"  
+				xmlns:EncComponents="EncComponents.*" >
+
+<!-- SiteProfiler.mxml
+
+December 2009
+By Quartic Solutions LLC
+All rights reserved.
+
+<mx:Style source="Styles/flekristal.css" />
+-->
+
+<fx:Script>
+		<![CDATA[
+
+
+		private function init():void
+			{	
+				// hide right-click menu items
+				//ExternalInterface.addCallback("rightClick", onRightClick);
+			}
+		
+		
+		]]>
+	</fx:Script>
+	
+
+	<fx:Style>
+	@namespace mx "library://ns.adobe.com/flex/mx";
+	@namespace s "library://ns.adobe.com/flex/spark";
+	@namespace esri "http://www.esri.com/2008/ags";
+	@namespace EncComponents "Finder/src/EncComponents.*";
+	
+	
+	esri|Navigation
+	{
+	skinClass: ClassReference("EncComponents.EncNavigationBar");
+	top: 35;
+	left: NaN;
+	right: 25;
+	}
+	global
+	{
+	chrome-color: #C5C7C6;
+	content-background-color: #C3CBC7;
+	stroke-width:8;
+	stroke-color:#C3CBC7;
+	corner-radius:8;
+	
+	
+	}
+	s|Group
+	{
+	text-align:center;
+	
+	}
+	</fx:Style>
+	
+<EncComponents:Profiler id="profiler" width="100%" height="100%"/>
+	
+</s:Application>
+
+

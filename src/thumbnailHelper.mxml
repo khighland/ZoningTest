@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This is a shell application for wrapping exported MXML components 
+	 
+	 WARNING! THIS IS A GENERATED FILE, AND WILL BE RE-GENERATED EACH TIME THE 
+	 AJAXBRIDGE APPLICATION IS RUN. YOU SHOULD NOT ADD CUSTOM CODE TO THIS FILE.
+ -->
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:EncComponents="EncComponents.*" 
+	height="100%" width="100%">
+	<EncComponents:thumbnail width="100%" height="100%" />
+	<fab:FABridge xmlns:fab="bridge.*" />
+</mx:Application>

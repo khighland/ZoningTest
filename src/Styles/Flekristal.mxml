@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" 
+	layout="absolute" width="1024" height="768" 
+	creationComplete="handleCreationComplete(event)"   >
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.events.EffectEvent;
+			import mx.managers.CursorManager;
+			import mx.effects.Resize;
+			import mx.effects.easing.Exponential;
+			import mx.effects.easing.Elastic;
+			import mx.effects.easing.Bounce;
+			import mx.controls.Image;
+			import mx.controls.Alert;
+			
+			private function handleCreationComplete(event: Event): void {
+				
+				progress.setProgress(50, 100);
+				bgImage.addEventListener(Event.COMPLETE,bgComplete);
+				fout.addEventListener(EffectEvent.EFFECT_END,fadein);
+				
+				
+				this.canvasAlphaSlider.value = 0.4;
+				mx.styles.StyleManager.getStyleDeclaration('global').setStyle('backgroundAlpha', 0.4);
+				
+				mx.styles.StyleManager.getStyleDeclaration('global').setStyle('color', 0x33EEFF);
+				this.fColor.selectedColor = 0x33EEFF; 
+				
+				mx.styles.StyleManager.getStyleDeclaration('Application').setStyle('backgroundAlpha',1); 
+				this.backgroundImageAlphaSlider.value=1;
+				
+			}
+			
+			private function cPanelAlpha():void{ 
+				mx.styles.StyleManager.getStyleDeclaration('global').setStyle('backgroundAlpha',canvasAlphaSlider.value);
+			}
+			
+			private function bgAlpha():void{ 
+				mx.styles.StyleManager.getStyleDeclaration('Application').setStyle('backgroundAlpha',backgroundImageAlphaSlider.value);
+			}
+			
+			private function cFontColor():void{
+				mx.styles.StyleManager.getStyleDeclaration('Application').setStyle('color',fColor.value);
+			}
+			
+			private function changeBackground(ev:Event):void {
+				CursorManager.setBusyCursor();
+				fout.play([bgImage]);
+					
+			}
+			private function fadein(ev:EffectEvent):void {
+				bgImage.load('backgrounds/' + this.bgCombo.selectedItem.toString() +'.jpg');
+			}
+			private function bgComplete(ev:Event):void {
+				fin.play([bgImage]);
+				CursorManager.removeBusyCursor();
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:Style source="flekristal.css"/>
+	<mx:Fade id="fout" alphaFrom="{backgroundImageAlphaSlider.value}" alphaTo="0" duration="500"/>
+	<mx:Fade id="fin" alphaFrom="0" alphaTo="{backgroundImageAlphaSlider.value}" duration="500"/>
+	
+	<mx:Resize id="re" widthTo="50" heightTo="50"/>
+	<mx:Canvas id="bgCanvas" width="1024" height="768" borderThickness="0">
+		<mx:Image id="bgImage" source="backgrounds/default.jpg" 
+			alpha="{backgroundImageAlphaSlider.value}"  
+			width="1024" height="768"/>
+	</mx:Canvas>
+	
+	<mx:MenuBar x="10" y="20" width="260">
+		<mx:dataProvider>
+			<mx:String>File</mx:String>
+			<mx:String>Edit</mx:String>
+			<mx:String>View</mx:String>
+			<mx:String>Modify</mx:String>
+			<mx:String>Text</mx:String>
+		</mx:dataProvider>
+	</mx:MenuBar>
+	
+	<mx:VDividedBox x="10" y="64" width="230" height="623" backgroundAlpha="0">
+		<mx:Panel id="panel" width="100%" height="360" layout="vertical" title="Panel" >
+			<mx:Canvas height="100%"   borderStyle="solid"  borderThickness="1" 
+				dropShadowColor="#000000" dropShadowEnabled="true" 
+				shadowDirection="center" shadowDistance="0.5"
+				textAlign="left" width="100%">
+						
+						<mx:HSlider maximum="1" id="canvasAlphaSlider" 
+							change="cPanelAlpha()" 
+							width="85" x="113" y="36"/>
+						
+						<mx:HSlider maximum="1" id="backgroundImageAlphaSlider" 
+							width="85" y="10" x="113"/>
+						
+						<mx:ComboBox  id="bgCombo" openEasingFunction="{mx.effects.easing.Elastic.easeOut}" 
+							openDuration="800"     
+							change="changeBackground(event)"
+							fontWeight="normal" 
+							dataProvider="{backgrounds}" x="38" y="122" width="160"/>
+						
+						<mx:ColorPicker id="fColor" 
+							change="cFontColor()" x="113" y="64"/>
+						
+						<mx:Label x="10" y="94" text="Background:"/>
+						<mx:Label x="10" y="10" text="Background alpha:"/>
+						<mx:Label x="10" y="38" text="Panel alpha"/>
+						<mx:Label x="10" y="66" text="Font color:"/>
+			</mx:Canvas>
+			<mx:ControlBar >
+				<mx:Button label="Button"  enabled="false"/>
+				<mx:Button label="Longer Button" cornerRadius="0"/>
+			</mx:ControlBar>
+		</mx:Panel>
+		<mx:Panel  height="180" layout="absolute" title="Tree" width="100%">
+			<mx:Tree openEasingFunction="{mx.effects.easing.Elastic.easeOut}" openDuration="1500"
+				right="0" left="0" top="0" bottom="0" showRoot="false" labelField="@label" >
+				<mx:dataProvider>
+					<mx:XML xmlns="">
+						<nodes>
+							<node label="Lorem Ipsum">
+								<node label="Dolor sit amet"/>
+								<node label="Consectetuer adipiscing elit"/>
+							</node>
+							<node label="Quisque eget lorem">
+								<node label="Ac sapien rutrum vehicula"/>
+								<node label="Etiam euismod"/>
+								<node label="Vestibulum erat"/>
+							</node>
+							<node label="Aenean arcu">
+								<node label="Phasellus condimentum"/>
+								<node label="Augue ac orci"/>
+								<node label="Ut sapien felis"/>
+							</node>
+							<node label="Rhoncus non"/>
+							<node label="Gravida vestibulum"/>
+							<node label="Vehicula non massa"/>
+							<node label="Etiam eget lorem"/>
+							<node label="Congue massa aliquet semper"/>
+							<node label="Cras at arcu"/>
+							<node label="Sed magna porttitor nonummy"/>
+							<node label="Aliquam quis ipsum"/>
+							<node label="In blandit"/>
+							<node label="Venenatis justo"/>
+							<node label="Vestibulum varius"/>
+							<node label="Interdum libero"/>
+							<node label="Nullam lorem nisl"/>
+							<node label="Vulputate nec"/>
+						</nodes>
+					</mx:XML>
+				</mx:dataProvider>
+			</mx:Tree>
+		</mx:Panel>
+	</mx:VDividedBox>	
+	<mx:Panel x="248" y="64" width="369" height="623" 
+		layout="absolute" 
+		title="Panel">
+		<mx:Accordion 
+			openEasingFunction="{mx.effects.easing.Elastic.easeOut}" 
+			openDuration="1500" 
+			left="0" right="0" top="0" bottom="0" 
+			borderThickness="0" 
+			backgroundAlpha="0">
+			
+			<mx:Canvas label="Accordion" width="100%" height="100%">
+				<mx:TextArea left="0" right="0" top="0" bottom="0" borderStyle="none" paddingLeft="10" paddingRight="5">
+					<mx:text><![CDATA[The background images are from www.patrickbennett.us, labnol.blogspot.com and many other sites. 
+					Thanks
+					
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Quisque eget lorem ac sapien rutrum vehicula. Etiam euismod vestibulum erat. Aenean arcu. Phasellus condimentum augue ac orci. Ut sapien felis, rhoncus non, gravida vestibulum, vehicula non, massa. Etiam eget lorem congue massa aliquet semper. Cras at arcu sed magna porttitor nonummy. Aliquam quis ipsum. In blandit venenatis justo. Vestibulum varius interdum libero. Nullam lorem nisl, vulputate nec, commodo vel, feugiat vel, erat. Suspendisse at lacus. Ut aliquet molestie mauris. 
+
+Fusce iaculis molestie tortor. Nulla ipsum nibh, tincidunt venenatis, pulvinar ut, vehicula eu, massa. Pellentesque blandit. Praesent metus augue, dapibus et, porttitor eu, porta tristique, orci. Proin est turpis, tristique dignissim, porttitor sit amet, sodales vitae, felis. Aenean venenatis, mauris ac ultrices varius, arcu purus accumsan justo, at sollicitudin risus libero id pede. Donec semper tellus in lacus. Nunc eget sapien at nisi blandit cursus. Nunc tristique libero. Duis consequat dignissim justo. Nam et risus. Donec quam. Integer scelerisque, felis nec mollis sagittis, erat tellus facilisis nulla, tempus adipiscing felis nulla quis justo. Cras pulvinar. Ut lacinia ligula ac felis. Nulla magna. Phasellus eu erat. Nullam euismod lobortis odio. Nunc elit nisl, rhoncus vitae, rhoncus tincidunt, molestie vel, massa.
+
+Donec posuere nonummy lacus. Praesent hendrerit, pede vel nonummy sodales, ipsum ante bibendum lacus, sed fringilla ipsum sapien eget velit. Duis vestibulum sollicitudin leo. Donec interdum tellus. Sed turpis. Nulla fermentum pharetra nulla. Fusce accumsan. Vivamus aliquet. Aenean id magna aliquam turpis molestie adipiscing. Aenean non ligula quis sem consequat porttitor. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nullam ornare elit. Quisque rutrum eros. Curabitur pharetra risus et mauris. Vivamus at nisl. In massa est, imperdiet vel, dignissim at, posuere vitae, lacus. Fusce tincidunt, metus eu iaculis pulvinar, lacus pede ullamcorper nisi, ut posuere velit ligula vel lorem. In accumsan dignissim felis. Praesent dui. Cras non felis non pede viverra dignissim.]]></mx:text>
+				</mx:TextArea>
+			</mx:Canvas>
+			
+			<mx:Canvas label="Lorem" width="100%" height="100%">
+			</mx:Canvas>
+			<mx:Canvas label="Ipsum" enabled="false" width="100%" height="100%">
+			</mx:Canvas>
+			<mx:Canvas label="ones more" width="100%" height="100%">
+			</mx:Canvas>
+		</mx:Accordion>
+		
+		<mx:ControlBar>
+			<mx:PopUpButton label="PopUp Button" width="153"/>
+			<mx:Spacer width="100%"/>
+		</mx:ControlBar>
+	</mx:Panel>
+	 
+	<mx:Panel x="625" y="64" width="389" height="623" 
+		layout="absolute" 
+		title="Panel">
+		
+		<mx:NumericStepper x="176" y="251" width="90"/>
+		<mx:Label x="69" y="253" text="Numeric Stepper:"/>
+		<mx:Label x="104" y="283" text="Date Field:"/>
+		<mx:Label x="120" y="400" text="Options:"/>
+		<mx:Label x="83" y="502" text="Broken Image:"/>
+		
+		<mx:ToggleButtonBar id="tBBar" selectedIndex="1"  x="10" y="355" width="349">
+			<mx:dataProvider>
+				<mx:String>Button Bar First</mx:String>
+				<mx:String>Button 2</mx:String>
+				<mx:String>Button 3</mx:String>
+				<mx:String>Button Bar Last</mx:String>
+			</mx:dataProvider>
+		</mx:ToggleButtonBar>
+		
+		<mx:RadioButtonGroup id="radioGroup"/>
+		<mx:RadioButton x="180" y="400" label="Radio Button 1"
+			 selected="true" group="{radioGroup}"/>
+		<mx:RadioButton x="180" y="426" label="Radio Button 2" 
+			group="{radioGroup}"/>
+		
+		<mx:CheckBox x="180" y="452" label="Check Box"/>
+		
+		<mx:DateField x="176" y="281"/>
+		
+		<mx:Image x="180" y="503" source="nonexistent.jpg"/>
+		
+		<mx:ProgressBar id="progress" x="180" y="527" 
+			indeterminate="true" 
+			minimum="0" maximum="100" 
+			mode="manual"/>
+		
+		<mx:TabNavigator x="10" y="10" width="100%" height="200" 
+			borderThickness="0" 
+			paddingTop="0" horizontalGap="0">
+			
+			<mx:Canvas label="Tab 1" width="100%" height="100%">
+				<mx:TextArea left="0" right="0" top="0" bottom="0" 
+					borderStyle="none" 
+					paddingLeft="10" 
+					paddingRight="5">
+				 
+				<mx:text><![CDATA[The background images are from www.patrickbennett.us, labnol.blogspot.com and many other sites. 
+					Thanks
+					 
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Quisque eget lorem ac sapien rutrum vehicula. Etiam euismod vestibulum erat. Aenean arcu. Phasellus condimentum augue ac orci. Ut sapien felis, rhoncus non, gravida vestibulum, vehicula non, massa. Etiam eget lorem congue massa aliquet semper. Cras at arcu sed magna porttitor nonummy. Aliquam quis ipsum. In blandit venenatis justo. Vestibulum varius interdum libero. Nullam lorem nisl, vulputate nec, commodo vel, feugiat vel, erat. Suspendisse at lacus. Ut aliquet molestie mauris. 
+
+ ]]></mx:text>
+			</mx:TextArea>
+			</mx:Canvas>
+			<mx:Canvas label="Tab 2" width="100%" height="100%">
+			</mx:Canvas>
+			<mx:Canvas label="Tab 3" width="100%" height="100%">
+			</mx:Canvas>
+			<mx:Canvas label="Tab 4" width="100%" height="100%">
+			</mx:Canvas>
+		</mx:TabNavigator>
+		<mx:ControlBar horizontalAlign="center">
+		</mx:ControlBar>
+		
+	</mx:Panel>
+	<mx:Label text="Flekristal by fleksray.org" fontWeight="bold" x="457" y="21"/>
+	<mx:LinkBar x="719" y="17" backgroundAlpha="0" >
+		<mx:dataProvider>
+			<mx:String>Link Bar</mx:String>
+			<mx:String>Lorem Ipsum</mx:String>
+			<mx:String>Dolor</mx:String>
+			<mx:String>Sit Amet</mx:String>
+		</mx:dataProvider>
+	</mx:LinkBar>
+	
+
+<mx:XMLList id="backgrounds" xmlns="">
+				
+						<image>default</image>
+						<image>gradient_gold</image>
+						<image>gradient_steel</image>
+						<image>gradient_bluesteel</image>
+						<image>gradient_bronze</image>
+						<image>gradient_messing</image>
+						<image>gradient_silver</image>
+						<image>gradient_blech1</image>
+						<image>gradient_blech2</image>
+						<image>gradient_blech3</image>
+						<image>gradient_blech4</image>
+						<image>gradient_blueskin</image>
+						<image>gradient_lightbrown</image>
+						<image>gradient_lightgrey</image>
+						<image>gradient_darkyellow</image>
+						<image>gradient_lemon</image>
+						<image>gradient_darkblue</image>
+						
+						<image>blue_grass</image>
+						<image>underwater</image>
+						<image>space</image>
+						<image>space2</image>
+						<image>pastel_woman</image>
+						<image>orangeman</image>
+						<image>orange_bridge</image>
+						<image>mixed_colors</image>
+						<image>greenpeople</image>
+						
+						<image>green_man</image>
+						<image>drops</image>
+						<image>dark_pier</image>
+						<image>city_dark</image>
+						<image>city</image>
+						<image>chinese_signs</image>
+						<image>candles</image>
+						<image>blue_man</image>
+						
+						<image>palmleaf</image>
+						<image>redmam</image>	
+						<image>savanna</image>	
+						<image>bloody_blade</image>	
+	
+</mx:XMLList>	
+</mx:Application>
