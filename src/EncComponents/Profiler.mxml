@@ -431,6 +431,7 @@ All rights reserved.
 			gp.getResultData(event.jobInfo.jobId, "HillsideResult", new AsyncResponder(onResultReturn,  anResultFail));
 			gp.getResultData(event.jobInfo.jobId, "SpecificPlanResult", new AsyncResponder(onResultReturn,  anResultFail));
 			gp.getResultData(event.jobInfo.jobId, "CoastalResult", new AsyncResponder(onResultReturn,  anResultFail));
+			gp.getResultData(event.jobInfo.jobId, "CDPResult", new AsyncResponder(onResultReturn,  anResultFail));
 			arrCollOverlayResult.removeItemAt(0);
 			gpPending = false;
 			//gp.getResultData(event.jobInfo.jobId, "ParcelResult", new AsyncResponder(onResultReturn,  anResultFail));
@@ -445,28 +446,31 @@ All rights reserved.
 				switch( result.paramName)
 				{
 					case 'FloodResult':
-						arrCollOverlayResult.addItem({paramName: "Flood Zone", url: "http://www.encinitasca.gov/Modules/ShowDocument.aspx?documentid=722" });
+						arrCollOverlayResult.addItem({paramName: "Floodplain", url: "http://archive.ci.encinitas.ca.us/WebLink8/DocView.aspx?id=677803&dbid=0" });
 						break;
 					case "CulturalResult":
-						arrCollOverlayResult.addItem({paramName: "Cultural Zone", url: "http://www.encinitasca.gov/Modules/ShowDocument.aspx?documentid=722" });
+						arrCollOverlayResult.addItem({paramName: "Cultural/Natural Resources", url: "http://archive.ci.encinitas.ca.us/WebLink8/DocView.aspx?id=677803&dbid=0" });
 						break;
 					case "MuseumResult":
-						arrCollOverlayResult.addItem({paramName: "Museum Zone", url: "http://www.encinitasca.gov/Modules/ShowDocument.aspx?documentid=722" });
+						arrCollOverlayResult.addItem({paramName: "Museum", url: "http://archive.ci.encinitas.ca.us/WebLink8/DocView.aspx?id=677803&dbid=0" });
 						break;
 					case "SpecificStudyResult":
-						arrCollOverlayResult.addItem({paramName: "Special Study Zone", url: "http://www.encinitasca.gov/Modules/ShowDocument.aspx?documentid=721" });
+						arrCollOverlayResult.addItem({paramName: "Special Study", url: "http://archive.ci.encinitas.ca.us/WebLink8/DocView.aspx?id=677803&dbid=0" });
 						break;
 					case "ScenicResult":
-						arrCollOverlayResult.addItem({paramName: "Scenic Zone", url: "http://www.encinitasca.gov/Modules/ShowDocument.aspx?documentid=722" });
+						arrCollOverlayResult.addItem({paramName: "Scenic/Visual Corridor", url: "http://archive.ci.encinitas.ca.us/WebLink8/DocView.aspx?id=677803&dbid=0" });
 						break;
 					case "HillsideResult":
-						arrCollOverlayResult.addItem({paramName: "Hillside Study Zone", url: "http://www.encinitasca.gov/Modules/ShowDocument.aspx?documentid=722" });
+						arrCollOverlayResult.addItem({paramName: "Hillside/Inland Bluff", url: "http://archive.ci.encinitas.ca.us/WebLink8/DocView.aspx?id=677803&dbid=0" });
 						break;
 					case "SpecificPlanResult":
-						arrCollOverlayResult.addItem({paramName: "Specific Plan Zone", url: "http://www.encinitasca.gov/Modules/ShowDocument.aspx?documentid=655" });
+						arrCollOverlayResult.addItem({paramName: "Specific Plan", url: "http://archive.ci.encinitas.ca.us/WebLink8/DocView.aspx?id=654004" });
 						break;
 					case "CoastalResult":
-						arrCollOverlayResult.addItem({paramName: "Coastal Zone", url: "http://www.encinitasca.gov/Modules/ShowDocument.aspx?documentid=722" });
+						arrCollOverlayResult.addItem({paramName: "Coastal Zone", url: "http://archive.ci.encinitas.ca.us/weblink8/0/doc/654006/Page1.aspx" });
+						break;
+					case "CDPResult":
+						arrCollOverlayResult.addItem({paramName: "CDP Required Additions Over 10%", url: "http://www.encinitasca.gov/modules/showdocument.aspx?documentid=3184" });
 						break;
 					default:
 						arrCollOverlayResult.addItem({paramName: "The parcel is not within any zone", url: FlexGlobals.topLevelApplication.url});
