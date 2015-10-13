@@ -202,28 +202,29 @@ All rights reserved.
 	
 	private function doSearchAddress(addr:String):void
 	{
-	var addressObjectAddress:Object = 
-	{
-		Street: addr
-	}
-
-	var myOutFieldsAddress:Array = ["HouseNum"];
-	AddressLocator.addressToLocations(addressObjectAddress,myOutFieldsAddress,new AsyncResponder(onGeoResult, onGeoFault));
+		var addressObjectAddress:Object = 
+		{
+			Street: addr
+		}
+	
+		var myOutFieldsAddress:Array = ["HouseNum"];
+		AddressLocator.addressToLocations(addressObjectAddress,myOutFieldsAddress,new AsyncResponder(onGeoResult, onGeoFault));
 	}
 	
 	private function doSearchAPN(addr:String):void
 	{
-	var addressObject:Object = 
-	{
-		SingleKey: addr
-	}
-
-	var myOutFields:Array = ["Match_addr"];
-	APNLocator.addressToLocations(addressObject,myOutFields,new AsyncResponder(onGeoResult, onGeoFault));
+		var addressObject:Object = 
+		{
+			SingleKey: addr
+		}
+	
+		var myOutFields:Array = ["Match_addr"];
+		APNLocator.addressToLocations(addressObject,myOutFields,new AsyncResponder(onGeoResult, onGeoFault));
 	}
 	
 	private function onMapClicked(event:MapMouseEvent):void
 	{
+		btnReportGenerator.enabled = false;
 		if (gpPending)
 		{
 			return;
@@ -329,6 +330,7 @@ All rights reserved.
 						}
 						zoneAttributes.addItem({Category: "Footnote", Value: strFootnote});
 					}
+					
 				}
 			}
 			private function onZoningFault(error:Fault, token:Object = null):void
@@ -435,7 +437,7 @@ All rights reserved.
 			arrCollOverlayResult.removeItemAt(0);
 			gpPending = false;
 			//gp.getResultData(event.jobInfo.jobId, "ParcelResult", new AsyncResponder(onResultReturn,  anResultFail));
-			
+			btnReportGenerator.enabled = true;
 			
 		}
 		
@@ -841,7 +843,7 @@ All rights reserved.
 				</mx:DataGrid>
 			</mx:VBox>
 									
-				<mx:Button label="Generate Report" enabled="true" visible="true" click="onGenerateReport(event)" id="btnReportGenerator"/>
+				<mx:Button label="Generate Report" enabled="false" visible="true" click="onGenerateReport(event)" id="btnReportGenerator"/>
 
 			</mx:TitleWindow>
 		</mx:VBox>
