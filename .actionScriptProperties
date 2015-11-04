@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <actionScriptProperties analytics="false" mainApplicationPath="ZoningTest.mxml" projectUUID="0a299fe2-4923-4b1f-8989-bbd8b8c8d0b0" version="11">
-  <compiler additionalCompilerArguments="-locale en_US -use-network=false" autoRSLOrdering="true" copyDependentFiles="true" fteInMXComponents="false" generateAccessible="false" htmlExpressInstall="true" htmlGenerate="true" htmlHistoryManagement="true" htmlPlayerVersionCheck="true" includeNetmonSwc="false" outputFolderLocation="C:/Inetpub/wwwroot/EZoning" outputFolderPath="bin-debug" removeUnusedRSL="true" rootURL="http://localhost/EZoning" sourceFolderPath="src" strict="true" targetPlayerVersion="0.0.0" useApolloConfig="false" useDebugRSLSwfs="true" useFlashSDK="false" verifyDigests="true" warn="true">
+  <compiler additionalCompilerArguments="-locale en_US -use-network=false" autoRSLOrdering="true" copyDependentFiles="true" fteInMXComponents="false" generateAccessible="false" htmlExpressInstall="true" htmlGenerate="true" htmlHistoryManagement="true" htmlPlayerVersionCheck="true" includeNetmonSwc="false" outputFolderLocation="C:/inetpub/wwwroot/EZoning" outputFolderPath="bin-debug" removeUnusedRSL="true" rootURL="http://localhost/EZoning" sourceFolderPath="src" strict="true" targetPlayerVersion="0.0.0" useApolloConfig="false" useDebugRSLSwfs="true" useFlashSDK="false" verifyDigests="true" warn="true">
     <compilerSourcePath/>
     <libraryPath defaultLinkType="1">
       <libraryPathEntry kind="4" path=""/>
       <libraryPathEntry kind="1" linkType="1" path="libs"/>
-      <libraryPathEntry kind="3" linkType="1" path="C:/Program Files/Adobe/Adobe Flash Builder 4.7/sdks/ArcGIS_Flex2.5/libs/agslib-2.5-2011-11-30.swc" useDefaultLinkType="false"/>
+      <libraryPathEntry kind="3" linkType="1" path="C:/Program Files/Adobe/Adobe Flash Builder 4.7 (64 Bit)/sdks/ArcGIS_Flex2.5/libs/agslib-2.5-2011-11-30.swc" useDefaultLinkType="false"/>
       <libraryPathEntry kind="3" linkType="1" path="/EncinitasGIS/bin/EncinitasGIS.swc" useDefaultLinkType="false"/>
     </libraryPath>
     <sourceAttachmentPath/>
