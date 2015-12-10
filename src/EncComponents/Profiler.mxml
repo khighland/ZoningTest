@@ -23,9 +23,6 @@ All rights reserved.
 
 <fx:Script>
 	<![CDATA[
-		import EncComponents.cboBookmarks;
-		import EncComponents.toc;
-		
 		import com.esri.ags.FeatureSet;
 		import com.esri.ags.Graphic;
 		import com.esri.ags.SpatialReference;
@@ -40,28 +37,31 @@ All rights reserved.
 		import com.esri.ags.layers.Layer;
 		import com.esri.ags.tasks.QueryTask;
 		import com.esri.ags.tasks.supportClasses.AddressCandidate;
+		import com.esri.ags.tasks.supportClasses.AddressToLocationsParameters;
 		import com.esri.ags.tasks.supportClasses.IdentifyParameters;
 		import com.esri.ags.tasks.supportClasses.IdentifyResult;
 		import com.esri.ags.tasks.supportClasses.ParameterValue;
+		import com.esri.ags.tasks.supportClasses.ProjectParameters;
 		import com.esri.ags.tasks.supportClasses.Query;
 		import com.esri.ags.tools.NavigationTool;
 		
 		import flash.net.navigateToURL;
 		
-		import mx.collections.*;
+		import mx.collections.ArrayCollection;
 		import mx.containers.TitleWindow;
 		import mx.controls.Alert;
 		import mx.core.FlexGlobals;
-
-		import mx.events.*;
-
 		import mx.events.FlexEvent;
+		import mx.events.ItemClickEvent;
 		import mx.graphics.ImageSnapshot;
 		import mx.graphics.codec.JPEGEncoder;
-
 		import mx.rpc.AsyncResponder;
 		import mx.rpc.Fault;
 		import mx.rpc.events.FaultEvent;
+		
+		import EncComponents.cboBookmarks;
+		import EncComponents.helperClass;
+		import EncComponents.toc;
 		
 		import org.cityofencinitas.ProcessRequestResultEvent;
 		import org.cityofencinitas.Service1;
@@ -143,7 +143,8 @@ All rights reserved.
 		
 
 		aLayersTOC.addItem(map.layers[2]);
-		
+		var myHelper:helperClass = new helperClass;
+		queryParcelLayer.url = queryParcelLayer.url  + myHelper.getLayerID("Parcels",BasmapPlus.layerInfos,false)
 		pt.x =cboBookmarks.x;
 		pt.y =cboBookmarks.y;
 		pt = cboBookmarks.localToContent(pt)
@@ -208,7 +209,11 @@ All rights reserved.
 		}
 	
 		var myOutFieldsAddress:Array = ["HouseNum"];
-		AddressLocator.addressToLocations(addressObjectAddress,myOutFieldsAddress,new AsyncResponder(onGeoResult, onGeoFault));
+		var addParams:AddressToLocationsParameters = new AddressToLocationsParameters();
+		addParams.outFields = myOutFieldsAddress;
+		addParams.address = addressObjectAddress;
+		AddressLocator.addressToLocations(addParams,new AsyncResponder(onGeoResult, onGeoFault));
+		//AddressLocator.addressToLocations(addressObjectAddress,myOutFieldsAddress,new AsyncResponder(onGeoResult, onGeoFault));
 	}
 	
 	private function doSearchAPN(addr:String):void
@@ -219,7 +224,11 @@ All rights reserved.
 		}
 	
 		var myOutFields:Array = ["Match_addr"];
-		APNLocator.addressToLocations(addressObject,myOutFields,new AsyncResponder(onGeoResult, onGeoFault));
+		var addParams:AddressToLocationsParameters = new AddressToLocationsParameters();
+		addParams.outFields = myOutFields;
+		addParams.address = addressObject;
+		APNLocator.addressToLocations(addParams,new AsyncResponder(onGeoResult, onGeoFault));
+		//APNLocator.addressToLocations(addressObject,myOutFields,new AsyncResponder(onGeoResult, onGeoFault));
 	}
 	
 	private function onMapClicked(event:MapMouseEvent):void
@@ -261,7 +270,11 @@ All rights reserved.
 				var coordGraphic:Graphic = new Graphic(point1,smsIdentify);
 				coordGraphic.geometry.spatialReference = new SpatialReference(2230)
 				var outSR:SpatialReference = new SpatialReference(102100);
-				geometry1.project([ point1 as Geometry],outSR);                        
+				var projParams:ProjectParameters = new ProjectParameters();
+				projParams.outSpatialReference = outSR;
+				projParams.geometries = [ point1 as Geometry]
+				geometry1.project(projParams);
+				//geometry1.project([ point1 as Geometry],outSR);                        
 				
 			}
 			else
@@ -538,6 +551,8 @@ All rights reserved.
 		if (map.level > 9) 
 		{
 			queryParcel.geometry = map.extent;
+			//var myHelper:helperClass = new helperClass;
+			//queryParcelLayer.url = queryParcelLayer.url  + myHelper.getLayerID("Parcels",BasmapPlus.layerInfos,false)
 			queryParcelLayer.execute(queryParcel, new AsyncResponder(onqueryParcelResult, onqueryParcelFail));
 		} 
 	 }
@@ -575,7 +590,7 @@ All rights reserved.
 	
 	private function onqueryParcelFail(info:Object, token:Object = null):void
 	{
-		Alert.show(info.toString(),"onqueryParcelFail");
+		//Alert.show(info.toString(),"onqueryParcelFail");
 	}
 			
 	private function graphicRollOverHandler(event:MouseEvent):void
@@ -735,7 +750,7 @@ All rights reserved.
 		</esri:Query>
 		
 		<esri:QueryTask id="queryParcelLayer" 
-						url="https://coemapservices.encinitasca.gov/hypegis/rest/services/Unsecured/BasemapPlus/MapServer/8" 
+						url="https://coemapservices.encinitasca.gov/hypegis/rest/services/Unsecured/BasemapPlus/MapServer/" 
 						useAMF="true"  />
 		
 		
@@ -866,7 +881,7 @@ All rights reserved.
 				<esri:LOD level="25" resolution="0.0793751587503175" scale="300"/>
 			</esri:lods> 
 				<esri:ArcGISTiledMapServiceLayer id="ShadedRelief"   url="https://coemapservices.encinitasca.gov/hypegis/rest/services/Unsecured/Shaded_Relief_2009/MapServer" visible="true" alpha="0"/>
-				<esri:ArcGISTiledMapServiceLayer id="Imagery"   url="https://coemapservices.encinitasca.gov/hypegis/rest/services/Unsecured/Imagery_2009_Web/MapServer" visible="true"/>
+				<esri:ArcGISTiledMapServiceLayer id="Imagery"   url="https://coemapservices.encinitasca.gov/hypegis/rest/services/Unsecured/Imagery_2014_Web/MapServer" visible="true"/>
 				<esri:ArcGISTiledMapServiceLayer id="Zoning" url="https://coemapservices.encinitasca.gov/hypegis/rest/services/Unsecured/E_Zoning/MapServer" visible="true" alpha=".5"/>
 				<esri:ArcGISTiledMapServiceLayer id="Basmap"   url="https://coemapservices.encinitasca.gov/hypegis/rest/services/Unsecured/Basemap/MapServer" visible="true"/> 
 				<esri:ArcGISTiledMapServiceLayer id="BasmapPlus"   url="https://coemapservices.encinitasca.gov/hypegis/rest/services/Unsecured/BasemapPlus/MapServer" visible="false"/>
