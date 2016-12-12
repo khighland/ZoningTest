@@ -864,7 +864,7 @@ All rights reserved.
 				<esri:LOD level="25" resolution="0.0793751587503175" scale="300"/>
 			</esri:lods> 
 				<esri:ArcGISTiledMapServiceLayer id="ShadedRelief"   url="https://coemapservices.encinitasca.gov/hypegis/rest/services/Unsecured/Shaded_Relief_2009/MapServer" visible="true" alpha="0"/>
-				<esri:ArcGISTiledMapServiceLayer id="Imagery"   url="https://coemapservices.encinitasca.gov/hypegis/rest/services/Unsecured/Imagery_2014_Web/MapServer" visible="true"/>
+				<esri:ArcGISTiledMapServiceLayer id="Imagery"   url="https://coemapservices.encinitasca.gov/hypegis/rest/services/Unsecured/Imagery_2009_Web/MapServer" visible="true"/>
 				<esri:ArcGISTiledMapServiceLayer id="Zoning" url="https://coemapservices.encinitasca.gov/hypegis/rest/services/Unsecured/E_Zoning/MapServer" visible="true" alpha=".5"/>
 				<esri:ArcGISTiledMapServiceLayer id="Basmap"   url="https://coemapservices.encinitasca.gov/hypegis/rest/services/Unsecured/Basemap/MapServer" visible="true"/> 
 				<esri:ArcGISTiledMapServiceLayer id="BasmapPlus"   url="https://coemapservices.encinitasca.gov/hypegis/rest/services/Unsecured/BasemapPlus/MapServer" visible="false"/>
