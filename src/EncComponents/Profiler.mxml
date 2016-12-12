@@ -649,7 +649,7 @@ All rights reserved.
 		var service2:Service1  = new Service1;
       	service2.addprocessRequestEventListener(function(event:ProcessRequestResultEvent):void{
       		//Alert.show(event.result);
-      		navigateToURL(new URLRequest('http://ezoning.cityofencinitas.org/zonereport?APN=' + APN + '&ZoneCode=' + ZoneCode +'&RequestID=' + APN + overlayzones ),"quote");
+      		navigateToURL(new URLRequest('http://ezoning.encinitasca.gov/zonereport?APN=' + APN + '&ZoneCode=' + ZoneCode +'&RequestID=' + APN + overlayzones ),"quote");
       		//navigateToURL(new URLRequest( Application.application.url + '/zoningreport/identify.png?APN=' + APN + '&ZoneCode=' + ZoneCode +'&RequestID=' + APN + overlayzones ),"quote");
       	});
       	var filename:String = APN + ".jpg";
