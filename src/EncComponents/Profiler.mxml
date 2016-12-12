@@ -294,7 +294,7 @@ All rights reserved.
 			identifyParams.tolerance=3;
 			identifyParams.layerOption = "all";
 			identifyZone.execute(identifyParams, new AsyncResponder(onZoningFound,onZoningFault));
-			identifyParams.layerIds= [7];
+			identifyParams.layerIds= [8];
 			identifyParcel.execute(identifyParams, new AsyncResponder(onParcelIdentify,onParcelsFault));
 	}
 	
@@ -756,7 +756,7 @@ All rights reserved.
 	
 		
 		<esri:SimpleFillSymbol  id="fillSymbol" color="0xFF0033" alpha="0.25" style="null">
-			<esri:SimpleLineSymbol color="0x6600FF" width="4" alpha="1" style="dashdotdot" />
+			<esri:SimpleLineSymbol color="0x6600FF" width="4" alpha="1" style="dash" />
 		</esri:SimpleFillSymbol>
 		
 		<!-- symbol to store geocode result so it can be reprojected -->
